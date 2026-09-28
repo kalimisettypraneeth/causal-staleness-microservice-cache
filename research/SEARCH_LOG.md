@@ -5,13 +5,21 @@
 | 2026-09-26 | USENIX / OSDI | bounded staleness distributed caches | peer-reviewed systems work | OSDI paper | Skybridge (OSDI 2025) directly studies bounded staleness for distributed caches. |
 | 2026-09-27 | USENIX NSDI | microservice graph caching coherence invalidation | NSDI / peer-reviewed | conference paper | MuCache (NSDI 2024) provides caching plus non-blocking coherence/invalidation for microservice graph topologies. |
 | 2026-09-27 | USENIX OSDI | bounded staleness distributed caches Skybridge | OSDI / peer-reviewed | conference paper | Skybridge provides an out-of-band stream for bounded cache staleness. |
-| 2026-09-27 | arXiv | causal cache serverless dependency consistency CausalMesh | research preprint | preprint | CausalMesh (2025) studies and formally verifies causally consistent caching in stateful serverless computing. |
+| 2026-09-27 | arXiv | causal cache serverless dependency consistency CausalMesh | research preprint | preprint | CausalMesh studies causal caching in stateful serverless computing; the peer-reviewed PVLDB record and prototype were subsequently verified. |
 | 2026-09-28 | IEEE DOI / arXiv | T-Cache inconsistency cost dependency cache serializability | ICDCS + preprint | conference paper | T-Cache (ICDCS 2015, DOI 10.1109/ICDCS.2015.75) treats inconsistency as costly and uses dependency information to detect inconsistent cached transactions. |
 | 2026-09-28 | Mechanism-gap review | stale state downstream work microservice DAG inconsistency cost selective revalidation | exact concept + synonyms | research and engineering leads | Broad dependency-aware or cost-aware cache claims overlap T-Cache; the remaining candidate must measure application-level downstream work caused by propagation. |
 | 2026-09-28 | Differentiation review | cache retry compensation wasted work stale propagation dependency graph | mechanism-focused | citation/search leads | Future review must test whether retry, compensation, wasted-compute, and freshness-debt literature already captures the proposed metric under another name. |
+| 2026-09-28 | PVLDB | probabilistically bounded staleness version time partial quorums | peer-reviewed primary source | PVLDB 2012 paper | PBS establishes probabilistic version and wall-clock staleness bounds; another age/frequency metric is insufficient. |
+| 2026-09-28 | ICIS archive | cost of stale answers refresh threshold database cache | peer-reviewed historical source | ICIS 1992 paper | Cost-triggered refresh based on stale-answer consequences predates this project; “revalidate when stale cost is high” is not a novel policy by itself. |
+| 2026-09-28 | USENIX USITS | piggyback cache validation coherency traffic | peer-reviewed primary source | USITS 1997 paper | Piggyback validation improves coherency while reducing validation traffic, constraining selective-validation claims. |
+| 2026-09-28 | DAG dependency search | LRC dependency-aware cache management application DAG | research paper + implementation report | data-analytics cache policy | LRC uses application DAG dependencies for cache replacement; DAG awareness alone is established outside microservices. |
+| 2026-09-28 | Primary-source synthesis | MuCache Skybridge T-Cache CausalMesh PBS stale answer cost | exact closest-work mapping | formal evidence table | Broad graph-aware, bounded-staleness, causal/dependency, inconsistency-cost, and cost-triggered validation claims are rejected. |
+| 2026-09-28 | Attribution-gap search | downstream wasted CPU RPC retry compensation stale input causal attribution | synonym + mechanism search | sparse direct matches; adjacent consistency/recovery work | No direct equivalence is claimed. The remaining search must cover sagas/compensation, provenance, request tracing, and cost-aware freshness under alternative terminology. |
 
 ## Evidence discipline
 
-- Peer-reviewed systems papers define the closest verified overlap.
-- Preprints are labeled separately and do not establish peer-reviewed priority.
-- The proposed downstream-cost metric and selective-revalidation policy remain **UNVERIFIED** pending synonym, mechanism, and citation-chain searches.
+- Peer-reviewed systems/database papers define scholarly overlap; prototypes are linked only when verified.
+- Preprints and extended reports are labeled separately from peer-reviewed records.
+- Historical work is included when it directly constrains “cost-aware” or “selective validation” claims.
+- Broad graph-aware, dependency-aware, bounded-staleness, causal-cache, inconsistency-cost, and cost-triggered-refresh novelty is rejected.
+- The proposed physical-unit downstream-work attribution and resulting policy remain **UNVERIFIED** pending provenance, retry/compensation, cost-aware freshness, and citation-chain searches.
