@@ -1,6 +1,6 @@
 # Closest Prior Art — Causal Staleness in Microservice Caches
 
-Review date: 2026-09-28  
+Review date: 2026-09-29  
 Status: **EVIDENCE TABLE IN PROGRESS — NOVELTY UNVERIFIED**
 
 Overlap taxonomy: `DIRECT`, `SUBSTANTIAL`, `PARTIAL`, `ADJACENT`, `FOUNDATIONAL`, `NONE IDENTIFIED`.
@@ -13,6 +13,8 @@ Overlap taxonomy: `DIRECT`, `SUBSTANTIAL`, `PARTIAL`, `ADJACENT`, `FOUNDATIONAL`
 | CausalMesh: A Causal Cache for Stateful Serverless Computing | 2024/2025 / PVLDB and extended verification report | Provide causally consistent caching when workflows migrate across servers | Stateful serverless workflows with multiple caches | transactional/causal semantics, abort/coordination properties, performance | Paper DOI 10.14778/3704965.3704969; code https://github.com/eniac/causalmesh; extended report https://arxiv.org/abs/2508.15647 | SUBSTANTIAL | Causal metadata and consistency are established. The candidate must not call causal dependency tracking novel. |
 | Probabilistically Bounded Staleness for Practical Partial Quorums | 2012 / PVLDB | Predict version and wall-clock staleness for partial quorums | Dynamo-style replicated stores and production-inspired workloads | version-based and time-based staleness probabilities | https://www.vldb.org/pvldb/vol5/p776_peterbailis_vldb2012.pdf | SUBSTANTIAL | Quantifying staleness probability/age is established; the proposed metric must measure attributable application harm rather than another staleness bound. |
 | Use of Stale Answers in Database Applications | 1992 / ICIS | Refresh cached data when the expected cost of using stale answers crosses a threshold | Database applications using cached objects | application-defined stale-answer cost versus refresh cost | https://aisel.aisnet.org/icis1992/1/ | DIRECT | Cost-triggered refresh is decades-old prior art. “Revalidate when expected stale cost is high” is not sufficient differentiation. |
+| Consistency Rationing in the Cloud: Pay Only When It Matters | 2009 / PVLDB | Dynamically vary consistency by data category and estimated consistency-violation penalty versus operation cost | Amazon S3 prototype with TPC-W | response time, service calls, incorrect operations, monetary penalty including compensation for booking errors | https://www.vldb.org/pvldb/vol2/vldb09-759.pdf | DIRECT | Application-consequence and compensation-penalty-aware consistency switching is established. The candidate must measure causally attributable physical downstream work in separate units, not rename a monetary or application penalty model. |
+| Coordination Avoidance in Database Systems | 2015 / PVLDB | Use invariant confluence to decide when coordination is necessary to preserve application correctness | Database invariants and TPC-C prototype on a 200-server cluster | invariant preservation, coordination, throughput/performance | https://www.vldb.org/pvldb/vol8/p185-bailis.pdf | SUBSTANTIAL | Application semantics and invariant risk already guide consistency/coordination choices. The candidate must not equate “consequential stale data” with novelty; it needs version-conditioned causal attribution and a fresh-state counterfactual. |
 | Study of Piggyback Cache Validation for Proxy Caches | 1997 / USENIX USITS | Improve coherency while reducing validation traffic by piggybacking checks | Trace-driven proxy-cache workloads | coherency/staleness and request traffic | https://www.usenix.org/conference/usits-97/study-piggyback-cache-validation-proxy-caches-world-wide-web | SUBSTANTIAL | Selective/combined validation techniques and traffic trade-offs are established; a new policy must use a distinct downstream-work signal and compare validation cost. |
 | LRC: Dependency-Aware Cache Management for Data Analytics Clusters | 2017 / research paper | Use application DAG dependencies for cache replacement | Data-analytics DAGs, including Spark implementation | application runtime, hit behavior, reference counts | https://arxiv.org/abs/1703.08280 | PARTIAL | Dependency-DAG-aware cache policy is established outside microservices. DAG awareness alone is not novel. |
 
@@ -46,9 +48,9 @@ A defensible metric must attribute concrete downstream effects to stale input, w
 
 ## Current synthesis
 
-The broad ideas of graph-aware caching, bounded staleness, causal/dependency metadata, inconsistency cost, cost-triggered refresh, and selective validation are established. The remaining candidate is narrower: a reproducible causal attribution of **application-level downstream work caused by stale state propagating through a microservice DAG**, plus a policy that uses predicted attributable work—not staleness alone—to decide revalidation.
+The broad ideas of graph-aware caching, bounded staleness, causal/dependency metadata, inconsistency cost, penalty-aware consistency rationing, invariant-aware coordination, cost-triggered refresh, and selective validation are established. The remaining candidate is narrower: a reproducible causal attribution of **application-level downstream work caused by stale state propagating through a microservice DAG**, plus a policy that uses predicted attributable work—not staleness alone—to decide revalidation.
 
-Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-style bounded visibility, T-Cache-style dependency detection, TTL, asynchronous invalidation, synchronous validation, and a cost-threshold refresh policy. Attribution must also compare against ordinary W3C-compatible distributed tracing/Pivot-Tracing-style causal correlation, while rare-event capture should account for Hindsight-style symptom-triggered retrieval.
+Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-style bounded visibility, T-Cache-style dependency detection, TTL, asynchronous invalidation, synchronous validation, a stale-answer cost threshold, and a Consistency-Rationing-style penalty-cost policy. Attribution must also compare against ordinary W3C-compatible distributed tracing/Pivot-Tracing-style causal correlation, while rare-event capture should account for Hindsight-style symptom-triggered retrieval.
 
 ## Remaining searches before gate completion
 
@@ -56,11 +58,12 @@ Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-styl
 - [ ] Direct stale/inconsistent-state retry, compensation, and wasted-work studies.
 - [x] Distributed trace-context propagation, happened-before causal correlation, and symptom-triggered trace capture.
 - [ ] Stale-state-conditioned causal attribution with a fresh-state counterfactual.
-- [ ] Cost-aware validation or freshness policies using application consequences.
+- [x] Cost- and penalty-aware validation/consistency policies using application consequences (1992 stale-answer cost and 2009 Consistency Rationing).
+- [x] Application-invariant-aware coordination boundaries (Invariant Confluence).
 - [ ] Forward/backward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work.
 - [ ] Evidence that the proposed physical-unit metric is not known under another name.
 - [ ] Artifact compatibility and reproducibility status for mandatory baselines.
 
 ## Gate decision
 
-**NOT COMPLETE.** This table rejects broad cost-aware/dependency-aware/selective-validation novelty, but stale-state-specific downstream-work attribution, direct inconsistent-state compensation/retry, alternative cost-aware freshness terminology, artifact compatibility, and citation-chain searches remain open.
+**NOT COMPLETE.** This table now also rejects novelty claims based on application penalty cost, compensation cost, or invariant-aware consistency switching. Stale-version-specific physical-work attribution, direct inconsistent-state retry/compensation studies, metric-name/synonym searches, artifact compatibility, and citation chains remain open.
