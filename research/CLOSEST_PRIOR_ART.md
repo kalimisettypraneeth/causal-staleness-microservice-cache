@@ -16,6 +16,12 @@ Overlap taxonomy: `DIRECT`, `SUBSTANTIAL`, `PARTIAL`, `ADJACENT`, `FOUNDATIONAL`
 | Study of Piggyback Cache Validation for Proxy Caches | 1997 / USENIX USITS | Improve coherency while reducing validation traffic by piggybacking checks | Trace-driven proxy-cache workloads | coherency/staleness and request traffic | https://www.usenix.org/conference/usits-97/study-piggyback-cache-validation-proxy-caches-world-wide-web | SUBSTANTIAL | Selective/combined validation techniques and traffic trade-offs are established; a new policy must use a distinct downstream-work signal and compare validation cost. |
 | LRC: Dependency-Aware Cache Management for Data Analytics Clusters | 2017 / research paper | Use application DAG dependencies for cache replacement | Data-analytics DAGs, including Spark implementation | application runtime, hit behavior, reference counts | https://arxiv.org/abs/1703.08280 | PARTIAL | Dependency-DAG-aware cache policy is established outside microservices. DAG awareness alone is not novel. |
 
+| Pivot Tracing: Dynamic Causal Monitoring for Distributed Systems | 2015 / ACM SOSP | Correlate metrics and events across thread, process, application, and machine boundaries using propagated baggage and happened-before joins | Java-based HDFS, HBase, MapReduce, and YARN cluster | cross-tier causal queries, root-cause localization, execution overhead | DOI 10.1145/2815400.2815415; paper https://sigops.org/s/conferences/sosp/2015/current/2015-Monterey/122-mace-online.pdf | SUBSTANTIAL | Cross-service causal-path attribution and propagated per-request metadata are established. The candidate must condition attribution on stale-state consumption, measure physical work deltas, and validate them against a fresh-state counterfactual. |
+| W3C Trace Context | 2021 / W3C Recommendation | Standardize trace identifiers and vendor-neutral propagation across distributed components | Distributed applications and microservices | trace-id, parent-id, flags, tracestate propagation | https://www.w3.org/TR/trace-context/ | FOUNDATIONAL | Request identifiers across service edges are standard infrastructure, not a contribution. The paper must specify sampling, fan-out, asynchronous boundaries, and missing-context handling. |
+| Sagas | 1987 / ACM SIGMOD | Decompose long-lived transactions and run compensating transactions when constituent actions cannot all complete | Long-lived database transactions | completed subtransactions and compensating actions | DOI 10.1145/38713.38742; https://dl.acm.org/doi/10.1145/38714.38742 | FOUNDATIONAL | Compensation is established transactional recovery. Novelty must be attribution of compensation work specifically caused by stale input, not defining compensation or merely counting saga steps. |
+| The Benefit of Hindsight: Tracing Edge-Cases in Distributed Systems | 2023 / USENIX NSDI | Persist detailed distributed traces retroactively after symptoms such as high tail latency, errors, or bottlenecked queues | High-rate distributed applications | trace capture rate/overhead and symptom-triggered retrieval | https://www.usenix.org/conference/nsdi23/presentation/zhang-lei | SUBSTANTIAL | Rare harmful paths can be captured after symptoms without tracing every request eagerly. The candidate needs a stale-state trigger/oracle and unbiased accounting, not just symptom-triggered trace retention. |
+| Metastable Failures in the Wild | 2022 / USENIX OSDI | Characterize triggers and amplification mechanisms in severe distributed-system failures | 22 incidents from 11 organizations plus controlled reproductions | triggers, sustaining effects, queue/retry/work amplification | https://www.usenix.org/conference/osdi22/presentation/huang-lexiang | PARTIAL | Retry and work amplification are established failure mechanisms. The cache paper must isolate stale input as the cause, distinguish ordinary overload/metastability, and count only incremental work. |
+
 ## Candidate metric boundary
 
 A working **Staleness Propagation Cost (SPC)** cannot be a renamed form of:
@@ -42,12 +48,14 @@ A defensible metric must attribute concrete downstream effects to stale input, w
 
 The broad ideas of graph-aware caching, bounded staleness, causal/dependency metadata, inconsistency cost, cost-triggered refresh, and selective validation are established. The remaining candidate is narrower: a reproducible causal attribution of **application-level downstream work caused by stale state propagating through a microservice DAG**, plus a policy that uses predicted attributable work—not staleness alone—to decide revalidation.
 
-Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-style bounded visibility, T-Cache-style dependency detection, TTL, asynchronous invalidation, synchronous validation, and a cost-threshold refresh policy.
+Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-style bounded visibility, T-Cache-style dependency detection, TTL, asynchronous invalidation, synchronous validation, and a cost-threshold refresh policy. Attribution must also compare against ordinary W3C-compatible distributed tracing/Pivot-Tracing-style causal correlation, while rare-event capture should account for Hindsight-style symptom-triggered retrieval.
 
 ## Remaining searches before gate completion
 
-- [ ] Retry, compensation, saga, and wasted-work literature under stale or inconsistent state.
-- [ ] Provenance/causal-attribution methods for distributed request graphs.
+- [x] Foundational saga compensation and general retry/work-amplification literature; no stale-specific equivalence inferred.
+- [ ] Direct stale/inconsistent-state retry, compensation, and wasted-work studies.
+- [x] Distributed trace-context propagation, happened-before causal correlation, and symptom-triggered trace capture.
+- [ ] Stale-state-conditioned causal attribution with a fresh-state counterfactual.
 - [ ] Cost-aware validation or freshness policies using application consequences.
 - [ ] Forward/backward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work.
 - [ ] Evidence that the proposed physical-unit metric is not known under another name.
@@ -55,4 +63,4 @@ Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-styl
 
 ## Gate decision
 
-**NOT COMPLETE.** This table rejects broad cost-aware/dependency-aware/selective-validation novelty, but downstream-work attribution, compensation/retry, provenance, and citation-chain searches remain open.
+**NOT COMPLETE.** This table rejects broad cost-aware/dependency-aware/selective-validation novelty, but stale-state-specific downstream-work attribution, direct inconsistent-state compensation/retry, alternative cost-aware freshness terminology, artifact compatibility, and citation-chain searches remain open.
