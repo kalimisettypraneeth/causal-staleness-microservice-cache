@@ -1,7 +1,7 @@
 # Differentiation — Causal Staleness in Microservice Caches
 
-Review date: 2026-09-28  
-Source audit head: `5177f8c1a030edb0084018ee9f74bf5a7de52ffe`  
+Review date: 2026-09-29  
+Reconciled evidence head: `fb329f6bd04d4656354845e3ca2a9e9fa48ebd2d`  
 Status: **PROVISIONAL — NOVELTY UNVERIFIED**
 
 ## Research question
@@ -15,7 +15,11 @@ Can application-level downstream work caused by stale state propagating through 
 | MuCache, NSDI 2024 | SUBSTANTIAL | Caching and non-blocking coherence/invalidation in microservice graphs | Measuring request-level downstream harm after stale state is consumed |
 | Skybridge, OSDI 2025 | SUBSTANTIAL | Bounding cache replication staleness | Connecting stale-state age/visibility to application work and side effects |
 | T-Cache, ICDCS 2015 | SUBSTANTIAL | Dependency-aware inconsistency detection; inconsistency as a cost | Propagation cost across service paths and cost-driven path revalidation, if distinct |
-| CausalMesh, 2025 preprint | PARTIAL | Causal cache metadata and consistency | Empirical downstream-work metric and policy in multi-tier microservice DAGs |
+| CausalMesh, PVLDB 2024/2025 | SUBSTANTIAL | Causal cache metadata, consistency, and protocol artifacts | Empirical downstream-work attribution conditioned on a stale version and fresh replay |
+| PBS, piggyback validation, and LRC | SUBSTANTIAL / PARTIAL | Probabilistic staleness bounds, selective validation, and DAG-aware cache policy | Physical downstream-work attribution rather than age, validation traffic, or graph awareness |
+| Stale-answer cost and Consistency Rationing | DIRECT | Application penalty/cost thresholds and consequence-aware consistency switching | Separate physical CPU/RPC/retry/compensation/cache-fill units before any weighting |
+| Invariant Confluence | SUBSTANTIAL | Application invariants as coordination boundaries | Version-conditioned incremental work, not generic semantic consequence |
+| Pivot Tracing, W3C Trace Context, Hindsight, Sagas, and metastability work | FOUNDATIONAL / SUBSTANTIAL / PARTIAL | Cross-tier causal correlation, trace propagation, rare-event capture, compensation, and retry/work amplification | Join an explicit stale-version marker to incremental work, validate with fresh replay, and prevent double counting |
 
 ## Candidate metric
 
@@ -40,7 +44,11 @@ The name and formulation remain provisional.
    - asynchronous invalidation;
    - synchronous validation;
    - bounded-staleness configuration;
-   - dependency-aware inconsistency detection where implementable.
+   - dependency-aware inconsistency detection where implementable;
+   - piggyback validation;
+   - stale-answer-cost thresholding;
+   - Consistency-Rationing-style penalty-cost control;
+   - ordinary W3C-compatible tracing and Pivot-Tracing-style joins.
 4. Evidence showing benefit beyond stale-read reduction alone.
 
 ## Claims this paper must not make
@@ -63,12 +71,16 @@ The candidate contribution is weakened or rejected if:
 
 ## Evidence required to pass this gate
 
-- [ ] Synonym search covers inconsistency cost, wasted work, retry/compensation amplification, freshness debt, and dependency-aware validation.
-- [ ] Backward/forward citation chains from MuCache, Skybridge, T-Cache, and causal-cache work are recorded.
-- [ ] SPC units, attribution method, and double-counting rules are specified.
-- [ ] Baselines isolate coherence, staleness bounds, causal consistency, and selective validation.
-- [ ] Candidate originality remains unverified until the closest-work table is complete.
+- [x] Formal closest-work evidence covers coherence, bounded staleness, dependency detection, causal caching, cost/penalty policies, tracing, compensation, and retry amplification.
+- [x] Baseline classes isolate coherence, staleness bounds, causal consistency, selective validation, cost policies, and tracing infrastructure.
+- [x] Public artifact availability and initial topology/environment/license constraints are inventoried.
+- [ ] Synonym search is complete for inconsistency cost, wasted work, retry/compensation amplification, freshness debt, and dependency-aware validation.
+- [ ] Backward/forward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work are complete.
+- [ ] The metric's exact physical units, fresh-replay attribution algorithm, shared-work rules, and double-counting tests are fully specified.
+- [ ] Direct stale/inconsistent-state retry, compensation, and wasted-work evidence is exhausted.
+- [ ] Selected baselines pass pinned build, smoke, behavioral, and workload-compatibility checks.
+- [x] Candidate claims remain labeled unverified.
 
 ## Gate decision
 
-**NOT COMPLETE.** The differentiation target, metric constraints, and falsifiers are fixed, but the gate remains open pending the synonym/citation search and formal closest-work table.
+**NOT COMPLETE.** The earlier “formal closest-work table missing” blocker is obsolete and has been cleared. The gate remains open for metric-synonym and citation-chain searches, stale-version-specific direct evidence, a complete attribution/double-counting specification, and executable-baseline verification. No experiment-design or implementation gate may start from this reconciliation alone.
