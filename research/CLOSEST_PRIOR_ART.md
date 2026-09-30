@@ -62,8 +62,9 @@ Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-styl
 - [x] Application-invariant-aware coordination boundaries (Invariant Confluence).
 - [ ] Forward/backward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work.
 - [ ] Evidence that the proposed physical-unit metric is not known under another name.
-- [ ] Artifact compatibility and reproducibility status for mandatory baselines.
+- [x] Public artifact availability, initial license, topology, and environment constraints inventoried in `research/BASELINE_ARTIFACTS.md`.
+- [ ] Build, smoke, behavioral-conformance, and workload-compatibility verification for selected executable baselines.
 
 ## Gate decision
 
-**NOT COMPLETE.** This table now also rejects novelty claims based on application penalty cost, compensation cost, or invariant-aware consistency switching. Stale-version-specific physical-work attribution, direct inconsistent-state retry/compensation studies, metric-name/synonym searches, artifact compatibility, and citation chains remain open.
+**NOT COMPLETE.** This table now also rejects novelty claims based on application penalty cost, compensation cost, or invariant-aware consistency switching. Public baseline-artifact availability is inventoried, but stale-version-specific physical-work attribution, direct inconsistent-state retry/compensation studies, metric-name/synonym searches, citation chains, and baseline build/behavior/workload compatibility remain open.
