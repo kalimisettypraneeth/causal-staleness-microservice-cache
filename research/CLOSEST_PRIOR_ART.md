@@ -17,6 +17,9 @@ Overlap taxonomy: `DIRECT`, `SUBSTANTIAL`, `PARTIAL`, `ADJACENT`, `FOUNDATIONAL`
 | Coordination Avoidance in Database Systems | 2015 / PVLDB | Use invariant confluence to decide when coordination is necessary to preserve application correctness | Database invariants and TPC-C prototype on a 200-server cluster | invariant preservation, coordination, throughput/performance | https://www.vldb.org/pvldb/vol8/p185-bailis.pdf | SUBSTANTIAL | Application semantics and invariant risk already guide consistency/coordination choices. The candidate must not equate “consequential stale data” with novelty; it needs version-conditioned causal attribution and a fresh-state counterfactual. |
 | Study of Piggyback Cache Validation for Proxy Caches | 1997 / USENIX USITS | Improve coherency while reducing validation traffic by piggybacking checks | Trace-driven proxy-cache workloads | coherency/staleness and request traffic | https://www.usenix.org/conference/usits-97/study-piggyback-cache-validation-proxy-caches-world-wide-web | SUBSTANTIAL | Selective/combined validation techniques and traffic trade-offs are established; a new policy must use a distinct downstream-work signal and compare validation cost. |
 | LRC: Dependency-Aware Cache Management for Data Analytics Clusters | 2017 / research paper | Use application DAG dependencies for cache replacement | Data-analytics DAGs, including Spark implementation | application runtime, hit behavior, reference counts | https://arxiv.org/abs/1703.08280 | PARTIAL | Dependency-DAG-aware cache policy is established outside microservices. DAG awareness alone is not novel. |
+| Stale View Cleaning: Getting Fresh Answers from Stale Materialized Views | 2015 / PVLDB | Clean samples from stale materialized views and estimate fresh aggregate answers without full maintenance | TPC-D-derived data and a real video-distribution application | answer error/accuracy, cleaning and maintenance cost | https://arxiv.org/abs/1509.07454 | SUBSTANTIAL | Fresh-answer estimation from stale state and selective cleaning are established. It does not attribute downstream microservice work to a consumed stale version. |
+| Making Cache Monotonic and Consistent | 2023 / PVLDB | Enforce consistency and monotonicity for cache-served application reads | database/application-server/cache model with batch and online request policies | consistency/monotonicity, latency and policy cost | https://www.vldb.org/pvldb/vol16/p891-cao.pdf | SUBSTANTIAL | This forward citation of T-Cache confirms that transactional/monotonic cache correctness remains active prior art. Correctness enforcement is not the proposed physical-work attribution. |
+| PBS at Work: Advancing Data Management with Consistency Metrics | 2013 / ACM SIGMOD demonstration | Expose PBS version/time staleness metrics for configuration and operational analysis | partial-quorum data-store configurations | k-staleness and t-visibility | https://pages.cs.wisc.edu/~shivaram/publications/pbs-demo-sigmod12.pdf | SUBSTANTIAL | This forward continuation of PBS operationalizes staleness metrics; it still measures version/time recency rather than stale-caused downstream work. |
 
 | Pivot Tracing: Dynamic Causal Monitoring for Distributed Systems | 2015 / ACM SOSP | Correlate metrics and events across thread, process, application, and machine boundaries using propagated baggage and happened-before joins | Java-based HDFS, HBase, MapReduce, and YARN cluster | cross-tier causal queries, root-cause localization, execution overhead | DOI 10.1145/2815400.2815415; paper https://sigops.org/s/conferences/sosp/2015/current/2015-Monterey/122-mace-online.pdf | SUBSTANTIAL | Cross-service causal-path attribution and propagated per-request metadata are established. The candidate must condition attribution on stale-state consumption, measure physical work deltas, and validate them against a fresh-state counterfactual. |
 | W3C Trace Context | 2021 / W3C Recommendation | Standardize trace identifiers and vendor-neutral propagation across distributed components | Distributed applications and microservices | trace-id, parent-id, flags, tracestate propagation | https://www.w3.org/TR/trace-context/ | FOUNDATIONAL | Request identifiers across service edges are standard infrastructure, not a contribution. The paper must specify sampling, fan-out, asynchronous boundaries, and missing-context handling. |
@@ -46,6 +49,29 @@ A defensible metric must attribute concrete downstream effects to stale input, w
 5. Report physical units separately; any weighted composite must publish weights and sensitivity analysis.
 6. Separate stale-state age from harm because old data can be harmless and recent data can be consequential.
 
+### Physical-unit vector before weighting
+
+For each root request (r), report the unweighted vector
+(Delta W_r=(Delta CPU_{ns},Delta RPC_{count},Delta RPC_{bytes},Delta retry_{count},Delta compensation_{count},Delta cacheFill_{count},Delta criticalPath_{ns})).
+Each delta is stale execution minus its matched fresh execution. Negative deltas remain visible; they are not clipped. A scalar policy score, if later used, is secondary, declares dimensional conversion/weights, and requires weight-sensitivity analysis.
+
+### Deterministic fresh-state oracle
+
+A stale/fresh pair is admissible only when the harness fixes the request bytes and logical root ID, dependency-version snapshot, invalidation schedule, pseudo-random seeds, service/container images, configuration, and fault schedule. External side effects use an idempotent sandbox or recorded deterministic responses. The run records output and side-effect digests. Pairs with digest mismatch unrelated to the stale version, missing trace context, or nondeterministic scheduling beyond a preregistered tolerance are excluded and reported; exclusion counts and reasons are published.
+
+### Fan-out, retry, and shared-work accounting
+
+- **Fan-out:** every physical span is charged once to its owning attempt; a parent aggregates unique child span IDs and never re-adds descendants through multiple paths.
+- **Retries:** every attempt has a stable logical-operation ID plus attempt number. Attempt CPU/RPC bytes count physically; logical retry count is the number of attempts after the first. The same attempt is never counted once as RPC work and again as a separate aggregate work unit.
+- **Compensation:** compensation spans carry the side-effect ID they undo and count only when the matched fresh run does not require that compensation.
+- **Shared work:** coalesced/batched work has one physical work ID. Primary results allocate it once using preregistered equal-share attribution across participating root requests; sensitivity results also report full-charge and causal-trigger allocation.
+- **Cache fills:** a fill is charged once by fill ID. Waiters inherit latency but not duplicate fill CPU/RPC work.
+- **Join rule:** only descendants of an explicit consumed-stale-version marker and absent (or smaller) in the matched fresh trace contribute to the stale-conditioned delta.
+
+### Null explanations and falsification
+
+Run matched fresh/stale experiments below and above the overload knee, plus a no-staleness overload control with the same offered load and fault schedule. If queue depth/service time predicts the work delta without the stale marker, if the delta persists in the no-staleness control, or if replay mismatch exceeds the preregistered tolerance, attribute the observation to ordinary overload/metastability or nondeterminism and reject or narrow the causal claim.
+
 ## Current synthesis
 
 The broad ideas of graph-aware caching, bounded staleness, causal/dependency metadata, inconsistency cost, penalty-aware consistency rationing, invariant-aware coordination, cost-triggered refresh, and selective validation are established. The remaining candidate is narrower: a reproducible causal attribution of **application-level downstream work caused by stale state propagating through a microservice DAG**, plus a policy that uses predicted attributable work—not staleness alone—to decide revalidation.
@@ -55,16 +81,16 @@ Mandatory baselines include MuCache-style coherence/invalidation, Skybridge-styl
 ## Remaining searches before gate completion
 
 - [x] Foundational saga compensation and general retry/work-amplification literature; no stale-specific equivalence inferred.
-- [ ] Direct stale/inconsistent-state retry, compensation, and wasted-work studies.
+- [x] Bounded direct search for stale/inconsistent-state retry, compensation, and wasted-work studies completed; adjacent penalty, cleaning, tracing, and amplification work was found, but no verified source in this bounded search measured the proposed per-request stale-version-conditioned physical-work vector. This is not an exhaustive novelty claim.
 - [x] Distributed trace-context propagation, happened-before causal correlation, and symptom-triggered trace capture.
-- [ ] Stale-state-conditioned causal attribution with a fresh-state counterfactual.
+- [x] Stale-state-conditioned causal-attribution search bounded; no verified equivalent found in the searched primary-source set, and the candidate oracle/accounting protocol is now stated for falsification.
 - [x] Cost- and penalty-aware validation/consistency policies using application consequences (1992 stale-answer cost and 2009 Consistency Rationing).
 - [x] Application-invariant-aware coordination boundaries (Invariant Confluence).
-- [ ] Forward/backward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work.
-- [ ] Evidence that the proposed physical-unit metric is not known under another name.
+- [x] Backward/forward chains were checked for the five seeds; representative constraining links are recorded (including T-Cache → monotonic-consistent caching, PBS → PBS-at-Work, and stale-answer cost → stale-view cleaning). MuCache/Skybridge chains are necessarily shallow because of recency and are not treated as complete-universe evidence.
+- [x] Bounded synonym search covered freshness debt/penalty, inconsistency cost, stale-answer cost, wasted work, work/retry amplification, selective cleaning, monotonic caching, and consequence-aware consistency; no equivalent verified, without asserting exhaustive absence.
 - [x] Public artifact availability, initial license, topology, and environment constraints inventoried in `research/BASELINE_ARTIFACTS.md`.
 - [ ] Build, smoke, behavioral-conformance, and workload-compatibility verification for selected executable baselines.
 
 ## Gate decision
 
-**NOT COMPLETE.** This table now also rejects novelty claims based on application penalty cost, compensation cost, or invariant-aware consistency switching. Public baseline-artifact availability is inventoried, but stale-version-specific physical-work attribution, direct inconsistent-state retry/compensation studies, metric-name/synonym searches, citation chains, and baseline build/behavior/workload compatibility remain open.
+**NOT COMPLETE.** This table now also rejects novelty claims based on application penalty cost, compensation cost, or invariant-aware consistency switching. Public baseline-artifact availability is inventoried, but the scholarly search and attribution specification are now bounded and documented, but baseline build, smoke, behavioral-conformance, and workload-compatibility verification remains open.

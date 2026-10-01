@@ -35,6 +35,24 @@ The metric must:
 
 The name and formulation remain provisional.
 
+### Preregistered attribution specification
+
+For every root request (r), publish the unweighted vector
+(Delta W_r=(Delta CPU_{ns},Delta RPC_{count},Delta RPC_{bytes},Delta retry_{count},Delta compensation_{count},Delta cacheFill_{count},Delta criticalPath_{ns})), computed as stale execution minus a matched fresh execution. Do not clip negative deltas. Any scalar score is secondary, declares unit conversions and weights, and includes sensitivity analysis.
+
+A matched fresh-state oracle must fix request bytes/logical ID, dependency-version snapshot, invalidation and fault schedule, random seeds, images/configuration, and recorded/idempotent external effects. Record output and side-effect digests. Exclude and report pairs with missing context or unexplained digest/scheduling mismatch above a preregistered tolerance.
+
+Accounting rules:
+
+1. charge every physical span once to one attempt and deduplicate by span/work ID;
+2. identify retries by stable logical-operation ID plus attempt number, counting physical work per attempt and logical retries only after the first;
+3. count compensation only when linked to a stale-caused side effect absent from the matched fresh run;
+4. charge a coalesced/batched shared-work ID once, using equal-share allocation for the primary result and full-charge/causal-trigger sensitivity analyses;
+5. charge a cache fill once by fill ID; waiters may inherit latency but not duplicate its CPU/RPC work; and
+6. admit work only when it descends from an explicit consumed-stale-version marker and is absent or smaller in the matched fresh trace.
+
+Null controls hold offered load and faults constant with no stale reads, and repeat below/above the overload knee. If queueing/service-time variables explain the delta without the stale marker, if the effect persists in the no-staleness control, or if replay nondeterminism invalidates pairing, reject or narrow the stale-causation claim.
+
 ## Candidate contributions
 
 1. A reproducible attribution method for downstream work caused by stale state in a service DAG.
@@ -74,13 +92,13 @@ The candidate contribution is weakened or rejected if:
 - [x] Formal closest-work evidence covers coherence, bounded staleness, dependency detection, causal caching, cost/penalty policies, tracing, compensation, and retry amplification.
 - [x] Baseline classes isolate coherence, staleness bounds, causal consistency, selective validation, cost policies, and tracing infrastructure.
 - [x] Public artifact availability and initial topology/environment/license constraints are inventoried.
-- [ ] Synonym search is complete for inconsistency cost, wasted work, retry/compensation amplification, freshness debt, and dependency-aware validation.
-- [ ] Backward/forward citation chains from MuCache, Skybridge, T-Cache, PBS, and stale-answer-cost work are complete.
-- [ ] The metric's exact physical units, fresh-replay attribution algorithm, shared-work rules, and double-counting tests are fully specified.
-- [ ] Direct stale/inconsistent-state retry, compensation, and wasted-work evidence is exhausted.
+- [x] A bounded synonym search covers inconsistency/stale-answer penalty, freshness debt, wasted work, retry/work amplification, compensation, selective stale-view cleaning, monotonic caching, and dependency-aware validation; no equivalent was verified, without claiming exhaustive absence.
+- [x] Backward/forward citation-chain checks are documented for all five seeds; representative forward constraints include T-Cache → monotonic-consistent caching, PBS → PBS-at-Work, and stale-answer cost → stale-view cleaning. MuCache/Skybridge forward chains remain shallow because of recency and are labeled accordingly.
+- [x] Exact physical units, deterministic fresh-replay pairing, fan-out/retry/compensation/cache-fill/shared-work rules, deduplication keys, sensitivity reporting, and overload/nondeterminism falsifiers are specified.
+- [x] The direct-evidence search is bounded and accurately labeled: verified adjacent mechanisms do not provide the proposed per-request stale-version-conditioned physical-work vector, but this is not an exhaustive novelty conclusion.
 - [ ] Selected baselines pass pinned build, smoke, behavioral, and workload-compatibility checks.
 - [x] Candidate claims remain labeled unverified.
 
 ## Gate decision
 
-**NOT COMPLETE.** The earlier “formal closest-work table missing” blocker is obsolete and has been cleared. The gate remains open for metric-synonym and citation-chain searches, stale-version-specific direct evidence, a complete attribution/double-counting specification, and executable-baseline verification. No experiment-design or implementation gate may start from this reconciliation alone.
+**NOT COMPLETE.** The earlier “formal closest-work table missing” blocker is obsolete and has been cleared. The gate remains open for executable-baseline verification. Scholarly search closure is bounded rather than universal, and implementation may reopen the novelty audit if new terminology or evidence appears. No experiment-design or implementation gate may start from this reconciliation alone.

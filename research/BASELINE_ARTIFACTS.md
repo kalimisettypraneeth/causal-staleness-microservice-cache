@@ -51,6 +51,19 @@ If official code is absent or incompatible, any replacement must be labeled a re
 
 No class means “reproduced.” Class A means only that license and public source are available for a future build gate.
 
+## Compatibility reconciliation — 2026-09-30
+
+No build or benchmark was run in this evidence task, and no paid resource was used. The executable-status gate is therefore unchanged and explicit:
+
+| Class | What is verified | What is not verified | Gate consequence |
+|---|---|---|---|
+| Official MuCache/CausalMesh artifacts | public repository, discovery revision, top-level MIT license, documented topology | clean build, deployment, smoke result, behavioral conformance, common workload adapter | Not executable for paper claims yet |
+| Harness-native controls | implementable contract for TTL, asynchronous invalidation, synchronous validation, W3C trace propagation | committed implementation and conformance tests | Design input only |
+| Paper/specification comparators | primary mechanism description for Skybridge, T-Cache, PBS, piggyback validation, stale-answer cost, Consistency Rationing | maintained canonical code or validated reimplementation | Must remain explicitly labeled reimplementations |
+| Candidate oracle/attribution | deterministic-pair and deduplication requirements specified | implementation, fault injection, trace completeness, replay-mismatch threshold validation | Cannot support measurements yet |
+
+Zero-cost rule: do not substitute a noisy or incompatible free environment merely to claim execution. If a comparator requires unavailable infrastructure, record the incompatibility and keep the gate blocked; no paid runner, CloudLab allocation, cloud service, storage, or subscription is authorized.
+
 ## Workload compatibility
 
 A baseline is comparable only if it can consume the same declared request trace, cache versions, invalidation schedule, fan-out topology, and side-effect model while emitting the same physical-unit telemetry. Full systems such as MuCache and CausalMesh must not be reduced to a feature label or compared as black boxes without documenting topology, consistency contract, and workload differences.
